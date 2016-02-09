@@ -114,7 +114,9 @@
                 $list: null,
                 touchObject: {},
                 transformsEnabled: false,
-                unslicked: false
+                unslicked: false,
+                intervalTime: 0,
+                remainingIntervalTime: 0,
             };
 
             $.extend(_, _.initials);
@@ -332,7 +334,7 @@
     };
 
     Slick.prototype.getNavTarget = function() {
-        
+
         var _ = this,
             asNavFor = _.options.asNavFor;
 
@@ -383,17 +385,31 @@
 
         var _ = this;
 
+        var autoplaySpeed = (_.initials.remainingIntervalTime === 0) ? _.options.autoplaySpeed : _.initials.remainingIntervalTime;
+
+        _.initials.intervalTime = new Date();
+
         _.autoPlayClear();
 
         if ( _.slideCount > _.options.slidesToShow ) {
-            _.autoPlayTimer = setInterval( _.autoPlayIterator, _.options.autoplaySpeed );
+            _.autoPlayTimer = setInterval( _.autoPlayIterator, autoplaySpeed );
         }
 
+        _.initials.remainingIntervalTime = 0;
     };
 
     Slick.prototype.autoPlayClear = function() {
 
-        var _ = this;
+        var _ = this,
+            clearDate = new Date(),
+            timeDifference;
+
+        if(_.initials.intervalTime) {
+          var timeDifference = clearDate.getTime() - _.initials.intervalTime.getTime();
+        } else {
+          var timeDifference = 0;
+        }
+        _.initials.remainingIntervalTime = _.options.autoplaySpeed - timeDifference;
 
         if (_.autoPlayTimer) {
             clearInterval(_.autoPlayTimer);
@@ -484,7 +500,7 @@
         if (_.options.dots === true && _.slideCount > _.options.slidesToShow) {
 
             _.$slider.addClass('slick-dotted');
-        
+
             dot = $('<ul />').addClass(_.options.dotsClass);
 
             for (i = 0; i <= _.getDotCount(); i += 1) {
@@ -795,7 +811,7 @@
 
         $(window).off('load.slick.slick-' + _.instanceUid, _.setPosition);
         $(document).off('ready.slick.slick-' + _.instanceUid, _.setPosition);
-    
+
     };
 
     Slick.prototype.cleanUpSlideEvents = function() {
@@ -1008,7 +1024,7 @@
 
         _.$slider
             .off('focus.slick blur.slick')
-            .on('focus.slick blur.slick', 
+            .on('focus.slick blur.slick',
                 '*:not(.slick-arrow)', function(event) {
 
             event.stopImmediatePropagation();
@@ -1338,7 +1354,7 @@
         }
 
         if ( _.options.dots === true && _.options.pauseOnDotsHover === true ) {
-            
+
             $('li', _.$dots)
                 .on('mouseenter.slick', $.proxy(_.interrupt, _, true))
                 .on('mouseleave.slick', $.proxy(_.interrupt, _, false));
@@ -1352,7 +1368,7 @@
         var _ = this;
 
         if ( _.options.pauseOnHover ) {
-            
+
             _.$list.on('mouseenter.slick', $.proxy(_.interrupt, _, true));
             _.$list.on('mouseleave.slick', $.proxy(_.interrupt, _, false));
 
@@ -1578,7 +1594,7 @@
         var _ = this;
 
         if( !_.unslicked ) {
-            
+
             _.$slider.trigger('afterChange', [_, index]);
 
             _.animating = false;
@@ -1931,7 +1947,7 @@
 
     };
 
-    Slick.prototype.setOption = 
+    Slick.prototype.setOption =
     Slick.prototype.slickSetOption = function() {
 
         /**
@@ -1962,7 +1978,7 @@
             refresh = arguments[2];
 
             if ( arguments[0] === 'responsive' && $.type( arguments[1] ) === 'array' ) {
-            
+
                 type = 'responsive';
 
             } else if ( typeof arguments[1] !== 'undefined' ) {
@@ -2266,7 +2282,7 @@
             _.autoPlay();
         }
         _.interrupted = toggle;
-        
+
     };
 
     Slick.prototype.selectHandler = function(event) {
@@ -2377,9 +2393,9 @@
         _.currentSlide = animSlide;
 
         _.setSlideClasses(_.currentSlide);
-        
+
         if ( _.options.asNavFor ) {
-            
+
             navTarget = _.getNavTarget();
             navTarget = navTarget.slick('getSlick');
 
